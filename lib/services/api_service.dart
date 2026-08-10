@@ -4,8 +4,13 @@ import 'package:http/http.dart' as http;
 import '../models/report_model.dart';
 
 class ApiService {
-  // Versioned v1 REST API Base URL (Supports Chrome web + Android emulator)
-  static String get baseUrl => kIsWeb ? 'http://localhost:8081/api/v1' : 'http://10.0.2.2:8081/api/v1';
+  // Versioned v1 REST API Base URL (Render Production API with Local Fallback)
+  static String get baseUrl {
+    if (kReleaseMode) {
+      return 'https://hello-care.onrender.com/api/v1';
+    }
+    return kIsWeb ? 'http://localhost:8081/api/v1' : 'http://10.0.2.2:8081/api/v1';
+  }
 
   // Process uploaded file asynchronously via DB jobs queue
   Future<Map<String, dynamic>> processReport(String fileUrl, String title, String patientId) async {
