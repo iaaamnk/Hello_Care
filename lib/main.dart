@@ -6,6 +6,7 @@ import 'providers/user_provider.dart';
 import 'providers/report_provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/module_provider.dart';
+import 'services/voice_assistant_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,7 @@ class HelloCareApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ReportProvider()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => ModuleProvider()),
+        ChangeNotifierProvider(create: (_) => VoiceAssistantService()),
       ],
       child: Consumer<UserProvider>(
         builder: (context, userProvider, child) {

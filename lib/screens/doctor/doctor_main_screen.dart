@@ -4,6 +4,10 @@ import 'qr_scanner_screen.dart';
 import 'availability_management_screen.dart';
 import 'doctor_profile_screen.dart';
 
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
+import '../../widgets/voice_assistant_widget.dart';
+
 class DoctorMainScreen extends StatefulWidget {
   const DoctorMainScreen({super.key});
 
@@ -23,10 +27,17 @@ class _DoctorMainScreenState extends State<DoctorMainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+    final userId = user?.uid ?? 'd_house_202';
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
+      ),
+      floatingActionButton: VoiceAssistantFAB(
+        userId: userId,
+        portal: 'doctor',
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

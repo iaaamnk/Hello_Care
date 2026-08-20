@@ -67,6 +67,17 @@ class VoiceTurnRequest(BaseModel):
         self.patientId = sanitize_text(self.patientId)
         return self
 
+class VoiceQueryRequest(BaseModel):
+    speechText: str = Field(..., min_length=1, max_length=1000)
+    userId: Optional[str] = Field("p_sarah_101", max_length=64)
+    portal: Optional[str] = Field("patient", pattern="^(patient|doctor)$")
+
+    def sanitize(self):
+        self.speechText = sanitize_text(self.speechText)
+        self.userId = sanitize_text(self.userId)
+        self.portal = sanitize_text(self.portal)
+        return self
+
 class QrGenerateRequest(BaseModel):
     patientId: Optional[str] = Field("p_sarah_101", max_length=64)
     reportIds: Optional[List[str]] = Field(default_factory=lambda: ["rep_001"])

@@ -5,6 +5,10 @@ import 'doctor_search_screen.dart';
 import 'patient_appointments_screen.dart';
 import 'patient_profile_screen.dart';
 
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
+import '../../widgets/voice_assistant_widget.dart';
+
 class PatientMainScreen extends StatefulWidget {
   const PatientMainScreen({super.key});
 
@@ -25,10 +29,17 @@ class _PatientMainScreenState extends State<PatientMainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+    final userId = user?.uid ?? 'p_sarah_101';
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
+      ),
+      floatingActionButton: VoiceAssistantFAB(
+        userId: userId,
+        portal: 'patient',
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

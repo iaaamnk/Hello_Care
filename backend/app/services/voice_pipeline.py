@@ -135,6 +135,91 @@ class VoicePipeline:
         })
         session["updated_at"] = datetime.now().isoformat()
 
+    @classmethod
+    def process_voice_query(cls, speech_text: str, user_id: str = "p_sarah_101", portal: str = "patient") -> dict:
+        lower_query = speech_text.lower()
+
+        # Keyword matching intent classification
+        appointment_keywords = ["appointment", "schedule", "booking", "slot", "visit", "doctor"]
+        report_keywords = ["report", "result", "level", "test", "mean", "blood", "lab", "cholesterol", "a1c", "thyroid", "summary"]
+
+        is_appointment = any(kw in lower_query for kw in appointment_keywords)
+        is_report = any(kw in lower_query for kw in report_keywords)
+
+        intent = "fallback"
+        if is_appointment:
+            intent = "appointment"
+        elif is_report:
+            intent = "report"
+
+        # Query and intent logging for debugging and intent improvement
+        print(f"[VoicePipeline Log] Portal: {portal} | Intent: {intent} | UserID: {user_id} | Query: {speech_text}")
+
+        DISCLAIMER = "\n\nDisclaimer: This is a simplified explanation, not medical advice — please confirm with your doctor."
+
+        if intent == "appointment":
+            if portal == "doctor":
+                appts = db.get_appointments(doctor_id=user_id)
+                if not appts:
+                    spoken = "Dr. House, you currently have no upcoming patient consultations scheduled."
+                else:
+                    count = len(appts)
+                    next_appt = appts[0]
+                    p_name = next_appt.get("patient_name", "your patient")
+                    time_str = next_appt.get("scheduled_at", "upcoming slot")
+                    spoken = f"Doctor, you have {count} scheduled consultation(s). Next appointment is with {p_name} at {time_str}."
+            else:
+                appts = db.get_appointments(patient_id=user_id)
+                if not appts:
+                    spoken = "You have no upcoming medical appointments scheduled."
+                else:
+                    next_appt = appts[0]
+                    doc_name = next_appt.get("doctor_name") or "Dr. Gregory House"
+                    time_str = next_appt.get("scheduled_at", "in 2 days")
+                    spoken = f"You have an upcoming appointment with {doc_name} scheduled for {time_str}."
+
+            return {
+                "intent": intent,
+                "portal": portal,
+                "spokenResponse": spoken
+            }
+
+        elif intent == "report":
+            if portal == "doctor":
+                reports = db.get_reports()
+                if not reports:
+                    spoken = "No medical reports are currently available in the clinic database." + DISCLAIMER
+                else:
+                    latest = reports[0]
+                    title = latest.get("title", "Medical Report")
+                    summary = latest.get("ai_summary") or latest.get("ocr_text") or "Standard lab metrics."
+                    prompt_ctx = f"Doctor Query: '{speech_text}'. Clinic Report: Title '{title}', Summary: '{summary}'. Explain concisely in simple terms, never diagnose."
+                    spoken = generate_voice_response_with_gemini(speech_text, prompt_ctx) + DISCLAIMER
+            else:
+                reports = db.get_reports(patient_id=user_id)
+                if not reports:
+                    spoken = "No medical reports found under your patient profile." + DISCLAIMER
+                else:
+                    latest = reports[0]
+                    title = latest.get("title", "Medical Report")
+                    summary = latest.get("ai_summary") or latest.get("ocr_text") or "Standard lab metrics."
+                    prompt_ctx = f"Patient Question: '{speech_text}'. Patient Report: Title '{title}', Findings: '{summary}'. Explain in simple terms to patient, never diagnose."
+                    spoken = generate_voice_response_with_gemini(speech_text, prompt_ctx) + DISCLAIMER
+
+            return {
+                "intent": intent,
+                "portal": portal,
+                "spokenResponse": spoken
+            }
+
+        else:
+            spoken = "Could you rephrase that? I can help with your reports or appointments."
+            return {
+                "intent": "fallback",
+                "portal": portal,
+                "spokenResponse": spoken
+            }
+
         return {
             "sessionId": session["id"],
             "channel": session["channel"],

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Response, Request
-from app.schemas import VoiceTurnRequest
+from app.schemas import VoiceTurnRequest, VoiceQueryRequest
 from app.services.voice_pipeline import VoicePipeline
 
 router = APIRouter(prefix="/voice", tags=["Voice Pipeline"])
@@ -18,6 +18,15 @@ def start_voice_session(req: dict = {}):
 def process_voice_turn(session_id: str, req: VoiceTurnRequest):
     result = VoicePipeline.process_turn(session_id, req.speechText, "in_app", req.patientId or "p_sarah_101")
     return result
+
+@router.post("/query")
+def voice_query(req: VoiceQueryRequest):
+    req = req.sanitize()
+    return VoicePipeline.process_voice_query(
+        speech_text=req.speechText,
+        user_id=req.userId or "p_sarah_101",
+        portal=req.portal or "patient"
+    )
 
 @router.post("/inbound")
 def twilio_inbound_webhook():
