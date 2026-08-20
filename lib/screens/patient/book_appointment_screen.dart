@@ -134,6 +134,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
       await appointmentProvider.bookAppointment(
         patientId: user?.uid ?? 'patient_456',
+        patientName: user?.name ?? 'Sarah Connor',
         doctor: widget.doctor,
         scheduledAt: DateTime.now().add(const Duration(days: 2)),
         notes: 'Requested consultation for $_selectedDay at $_selectedTimeSlot',

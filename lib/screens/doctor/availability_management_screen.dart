@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/appointment_provider.dart';
+import '../../providers/user_provider.dart';
 
 class AvailabilityManagementScreen extends StatefulWidget {
   const AvailabilityManagementScreen({super.key});
@@ -15,6 +18,12 @@ class _AvailabilityManagementScreenState extends State<AvailabilityManagementScr
     'Thursday': ['01:30 PM', '04:00 PM'],
     'Friday': ['09:00 AM', '01:00 PM', '03:30 PM'],
   };
+
+  void _syncScheduleWithProvider() {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final doctorId = user?.uid ?? 'doc_1';
+    Provider.of<AppointmentProvider>(context, listen: false).updateSchedule(doctorId, _schedule);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +59,7 @@ class _AvailabilityManagementScreenState extends State<AvailabilityManagementScr
                           deleteIcon: const Icon(Icons.close, size: 14),
                           onDeleted: () {
                             setState(() => entry.value.remove(slot));
+                            _syncScheduleWithProvider();
                           },
                         );
                       }).toList(),
@@ -64,9 +74,19 @@ class _AvailabilityManagementScreenState extends State<AvailabilityManagementScr
     );
   }
 
-  void _addSlot(String day) {
-    setState(() {
-      _schedule[day]?.add('05:00 PM');
-    });
+  Future<void> _addSlot(String day) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 9, minute: 0),
+    );
+    if (picked != null && mounted) {
+      final formattedTime = picked.format(context);
+      setState(() {
+        if (!(_schedule[day]?.contains(formattedTime) ?? false)) {
+          _schedule[day]?.add(formattedTime);
+        }
+      });
+      _syncScheduleWithProvider();
+    }
   }
 }

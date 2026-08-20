@@ -123,12 +123,25 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                       child: const Icon(Icons.person, color: Color(0xFF0F766E)),
                                     ),
                                     const SizedBox(width: 10),
-                                    const Expanded(
+                                    Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text('Sarah Connor', style: TextStyle(fontWeight: FontWeight.bold)),
-                                          Text('Patient ID: p_sarah_101', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                          Text(
+                                            appt.patientName.isNotEmpty ? appt.patientName : 'Sarah Connor',
+                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(
+                                            'Patient ID: ${appt.patientId}',
+                                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                          ),
+                                          if (appt.notes.isNotEmpty)
+                                            Text(
+                                              appt.notes,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(fontSize: 10, color: Color(0xFF0F766E)),
+                                            ),
                                         ],
                                       ),
                                     )
@@ -139,8 +152,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'Time: ${appt.scheduledAt.hour}:00 PM',
-                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                      'Date: ${appt.scheduledAt.month}/${appt.scheduledAt.day} @ ${appt.scheduledAt.hour > 12 ? appt.scheduledAt.hour - 12 : appt.scheduledAt.hour}:00 ${appt.scheduledAt.hour >= 12 ? 'PM' : 'AM'}',
+                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
                                     ),
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(

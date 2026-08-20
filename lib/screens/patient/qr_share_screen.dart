@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/api_service.dart';
 
+import '../../providers/report_provider.dart';
+
 class QrShareScreen extends StatefulWidget {
   const QrShareScreen({super.key});
 
@@ -25,7 +27,18 @@ class _QrShareScreenState extends State<QrShareScreen> {
 
   void _generateToken() async {
     final user = Provider.of<UserProvider>(context, listen: false).user;
-    final res = await _apiService.generateQrToken(user?.uid ?? 'patient_456', ['rep_101', 'rep_102'], 15);
+    final reportProvider = Provider.of<ReportProvider>(context, listen: false);
+    final reportsData = reportProvider.reports.map((r) => r.toJson()).toList();
+
+    final res = await _apiService.generateQrToken(
+      user?.uid ?? 'patient_456',
+      reportProvider.reports.map((r) => r.id).toList(),
+      15,
+      patientName: user?.name ?? 'Sarah Connor',
+      allergies: user?.allergies ?? ['Penicillin', 'Peanuts'],
+      conditions: user?.conditions ?? ['Mild Asthma', 'Vitamin D Deficiency'],
+      reports: reportsData.isNotEmpty ? reportsData : null,
+    );
     if (mounted) {
       setState(() {
         _qrToken = res['token'];

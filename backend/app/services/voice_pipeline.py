@@ -107,21 +107,24 @@ class VoicePipeline:
         if "report" in lower_query or "blood test" in lower_query or "summary" in lower_query:
             executed_function = "get_latest_report_summary"
             function_call_result = cls.execute_function_call(executed_function, {}, patient_id)
-            spoken_response = f"According to your latest report ({function_call_result.get('reportTitle')}): {function_call_result.get('summary')}"
+            report_context = f"Report Title: {function_call_result.get('reportTitle', 'Blood Panel')}. Summary: {function_call_result.get('summary', 'Normal A1c')}"
+            spoken_response = generate_voice_response_with_gemini(speech_text, report_context)
         elif "slot" in lower_query or "available" in lower_query or "when can i see" in lower_query:
             executed_function = "list_available_slots"
             function_call_result = cls.execute_function_call(executed_function, {}, patient_id)
-            spoken_response = f"Dr. Gregory House has {function_call_result.get('availableSlotsCount')} available slot(s). Next available is tomorrow."
+            context_info = f"Available doctor slots count: {function_call_result.get('availableSlotsCount', 2)}."
+            spoken_response = generate_voice_response_with_gemini(speech_text, context_info)
         elif "book" in lower_query or "appointment" in lower_query or "schedule" in lower_query:
             executed_function = "book_appointment"
             slot_time = (datetime.now() + timedelta(days=1)).isoformat()
             function_call_result = cls.execute_function_call(executed_function, {"scheduledAt": slot_time}, patient_id)
             if function_call_result.get("success"):
-                spoken_response = f"I have scheduled your appointment with Dr. Gregory House!"
+                context_info = "Appointment successfully confirmed with Dr. Gregory House for tomorrow."
             else:
-                spoken_response = "Sorry, that appointment slot is already taken. Would you like me to find another available slot?"
+                context_info = "Appointment booking failed because slot was double booked."
+            spoken_response = generate_voice_response_with_gemini(speech_text, context_info)
         else:
-            spoken_response = "Hello! I am your HelloCare voice assistant. You can ask me about your recent medical test reports or schedule an appointment with Dr. House."
+            spoken_response = generate_voice_response_with_gemini(speech_text, "HelloCare medical assistant general inquiry.")
 
         session["transcript"].append({
             "role": "assistant",

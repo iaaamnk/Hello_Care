@@ -14,6 +14,7 @@ class UploadReportScreen extends StatefulWidget {
 
 class _UploadReportScreenState extends State<UploadReportScreen> {
   final _titleController = TextEditingController();
+  final _contentController = TextEditingController();
   String _selectedFileType = 'pdf';
   bool _isUploading = false;
   String? _selectedFileName;
@@ -41,6 +42,16 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
                   labelText: 'Report Title',
                   prefixIcon: Icon(Icons.title_rounded),
                   hintText: 'e.g. Comprehensive Blood Test',
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _contentController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Report Content / Lab Metrics (Optional)',
+                  prefixIcon: Icon(Icons.description_outlined),
+                  hintText: 'Paste or type raw report text, e.g.:\nHemoglobin A1c: 5.8%\nTotal Cholesterol: 190 mg/dL\nVitamin D: 22 ng/mL',
                 ),
               ),
               const SizedBox(height: 16),
@@ -77,7 +88,7 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
               GestureDetector(
                 onTap: _pickFile,
                 child: Container(
-                  height: 140,
+                  height: 120,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(16),
@@ -86,7 +97,7 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.cloud_upload_outlined, size: 40, color: Theme.of(context).primaryColor),
+                      Icon(Icons.cloud_upload_outlined, size: 36, color: Theme.of(context).primaryColor),
                       const SizedBox(height: 8),
                       Text(
                         _selectedFileName ?? 'Tap to select or capture file',
@@ -107,13 +118,13 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 12),
-                    Text('Uploading report & running OCR AI analysis...'),
+                    Text('Uploading report & running Gemini 3.6 AI transcriber...'),
                   ],
                 )
               else
                 ElevatedButton(
                   onPressed: _handleUpload,
-                  child: const Text('Upload & Run AI Summarizer'),
+                  child: const Text('Upload & Transcribe with Gemini AI'),
                 ),
             ],
           ),
@@ -124,13 +135,23 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
-      type: _selectedFileType == 'pdf' ? FileType.custom : FileType.image,
-      allowedExtensions: _selectedFileType == 'pdf' ? ['pdf'] : ['png', 'jpg', 'jpeg'],
+      type: FileType.custom,
+      allowedExtensions: _selectedFileType == 'pdf' ? ['pdf', 'txt'] : ['png', 'jpg', 'jpeg'],
+      withData: true,
     );
 
     if (result != null && result.files.single.name.isNotEmpty) {
+      final file = result.files.single;
       setState(() {
-        _selectedFileName = result.files.single.name;
+        _selectedFileName = file.name;
+        if (file.bytes != null && _contentController.text.isEmpty) {
+          try {
+            final text = String.fromCharCodes(file.bytes!);
+            if (text.trim().isNotEmpty && text.contains(RegExp(r'[a-zA-Z0-9]'))) {
+              _contentController.text = text;
+            }
+          } catch (_) {}
+        }
       });
     }
   }
@@ -152,6 +173,7 @@ class _UploadReportScreenState extends State<UploadReportScreen> {
       title: _titleController.text,
       fileUrl: 'https://example.com/reports/${_selectedFileName ?? 'doc.pdf'}',
       fileType: _selectedFileType,
+      fileContent: _contentController.text.trim().isNotEmpty ? _contentController.text.trim() : null,
     );
 
     if (mounted) {

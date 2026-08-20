@@ -65,24 +65,26 @@ class JobWorker:
                 report_id = pending_job["payload"].get("reportId")
                 title = pending_job["payload"].get("title", "Medical Report")
                 file_url = pending_job["payload"].get("fileUrl", "")
+                file_content = pending_job["payload"].get("fileContent")
 
-                report = next((r for r in db.reports if r["id"] == report_id), None)
+                report = db.get_report_by_id(report_id)
                 if report:
-                    report["status"] = "ocr_processing"
+                    db.update_report(report_id, {"status": "ocr_processing"})
                     await asyncio.sleep(0.2)
 
-                    # Call Gemini API Processor
-                    gemini_result = process_report_with_gemini(title, file_url)
+                    # Call Gemini 3.6 Flash API Processor
+                    gemini_result = process_report_with_gemini(title, file_url, file_content)
 
-                    report["status"] = "summarizing"
+                    db.update_report(report_id, {"status": "summarizing"})
                     await asyncio.sleep(0.2)
 
-                    report["ocr_text"] = gemini_result.get("ocr_text")
-                    report["ai_summary"] = gemini_result.get("ai_summary")
-                    report["ai_suggestions"] = gemini_result.get("ai_suggestions", [])
-                    report["tags"] = gemini_result.get("tags", ["Blood Test"])
-                    report["status"] = "ready"
-                    report["updated_at"] = datetime.now().isoformat()
+                    db.update_report(report_id, {
+                        "ocr_text": gemini_result.get("ocr_text"),
+                        "ai_summary": gemini_result.get("ai_summary"),
+                        "ai_suggestions": gemini_result.get("ai_suggestions", []),
+                        "tags": gemini_result.get("tags", ["Medical Report"]),
+                        "status": "ready"
+                    })
 
             pending_job["status"] = "completed"
             pending_job["result"] = {"success": True}
@@ -97,9 +99,9 @@ class JobWorker:
 
             report_id = pending_job.get("payload", {}).get("reportId")
             if report_id:
-                report = next((r for r in db.reports if r["id"] == report_id), None)
-                if report:
-                    report["status"] = "failed"
-                    report["error_message"] = str(e)
+                db.update_report(report_id, {
+                    "status": "failed",
+                    "error_message": str(e)
+                })
 
 job_worker = JobWorker()

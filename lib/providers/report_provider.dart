@@ -32,7 +32,12 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _reports = await _firestoreService.getPatientReports(patientId);
+      final remoteReports = await _apiService.getReports(patientId);
+      if (remoteReports.isNotEmpty) {
+        _reports = remoteReports;
+      } else {
+        _reports = await _firestoreService.getPatientReports(patientId);
+      }
       _aggregatedSummary = await _apiService.getAggregatedSummary(_reports);
     } finally {
       _isLoading = false;
@@ -45,15 +50,21 @@ class ReportProvider extends ChangeNotifier {
     required String title,
     required String fileUrl,
     required String fileType,
+    String? fileContent,
   }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final processResult = await _apiService.processReport(fileUrl, title, patientId);
+      final processResult = await _apiService.processReport(
+        fileUrl,
+        title,
+        patientId,
+        fileContent: fileContent,
+      );
 
       final newReport = ReportModel(
-        id: 'rep_${DateTime.now().millisecondsSinceEpoch}',
+        id: processResult['id'] ?? 'rep_${DateTime.now().millisecondsSinceEpoch}',
         patientId: patientId,
         title: title,
         fileUrl: fileUrl,

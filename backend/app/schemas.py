@@ -33,23 +33,28 @@ class ReportUploadRequest(BaseModel):
     title: str = Field(..., min_length=2, max_length=150)
     fileUrl: str = Field(..., max_length=1000)
     patientId: Optional[str] = Field("p_sarah_101", max_length=64)
+    fileContent: Optional[str] = Field(None, max_length=10000)
 
     def sanitize(self):
         self.title = sanitize_text(self.title)
         self.fileUrl = sanitize_text(self.fileUrl)
         self.patientId = sanitize_text(self.patientId)
+        if self.fileContent:
+            self.fileContent = self.fileContent.strip()[:10000]
         return self
 
 class AppointmentBookRequest(BaseModel):
     doctorId: str = Field(..., max_length=64)
     scheduledAt: str = Field(..., max_length=64)
     patientId: Optional[str] = Field("p_sarah_101", max_length=64)
+    patientName: Optional[str] = Field("Sarah Connor", max_length=100)
     notes: Optional[str] = Field("General consultation", max_length=500)
 
     def sanitize(self):
         self.doctorId = sanitize_text(self.doctorId)
         self.scheduledAt = sanitize_text(self.scheduledAt)
         self.patientId = sanitize_text(self.patientId)
+        self.patientName = sanitize_text(self.patientName)
         self.notes = sanitize_text(self.notes)
         return self
 

@@ -1,6 +1,7 @@
 class AppointmentModel {
   final String id;
   final String patientId;
+  final String patientName;
   final String doctorId;
   final String doctorName;
   final String doctorSpecialization;
@@ -11,6 +12,7 @@ class AppointmentModel {
   AppointmentModel({
     required this.id,
     required this.patientId,
+    this.patientName = 'Sarah Connor',
     required this.doctorId,
     required this.doctorName,
     required this.doctorSpecialization,
@@ -23,6 +25,7 @@ class AppointmentModel {
     return {
       'id': id,
       'patientId': patientId,
+      'patientName': patientName,
       'doctorId': doctorId,
       'doctorName': doctorName,
       'doctorSpecialization': doctorSpecialization,
@@ -35,12 +38,13 @@ class AppointmentModel {
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
       id: json['id'] ?? '',
-      patientId: json['patientId'] ?? '',
-      doctorId: json['doctorId'] ?? '',
-      doctorName: json['doctorName'] ?? '',
-      doctorSpecialization: json['doctorSpecialization'] ?? '',
-      scheduledAt: json['scheduledAt'] != null
-          ? DateTime.parse(json['scheduledAt'])
+      patientId: json['patientId'] ?? json['patient_id'] ?? '',
+      patientName: json['patientName'] ?? json['patient_name'] ?? 'Sarah Connor',
+      doctorId: json['doctorId'] ?? json['doctor_id'] ?? '',
+      doctorName: json['doctorName'] ?? json['doctor_name'] ?? 'Dr. Evelyn Harper',
+      doctorSpecialization: json['doctorSpecialization'] ?? json['doctor_specialization'] ?? 'Specialist',
+      scheduledAt: json['scheduledAt'] != null || json['scheduled_at'] != null
+          ? DateTime.parse(json['scheduledAt'] ?? json['scheduled_at'])
           : DateTime.now(),
       status: json['status'] ?? 'pending',
       notes: json['notes'] ?? '',

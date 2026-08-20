@@ -3,8 +3,28 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/report_provider.dart';
 
-class ReportsScreen extends StatelessWidget {
+import '../../providers/user_provider.dart';
+
+class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
+
+  @override
+  State<ReportsScreen> createState() => _ReportsScreenState();
+}
+
+class _ReportsScreenState extends State<ReportsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshReports();
+    });
+  }
+
+  Future<void> _refreshReports() async {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    await Provider.of<ReportProvider>(context, listen: false).fetchReports(user?.uid ?? 'patient_456');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,12 +37,18 @@ class ReportsScreen extends StatelessWidget {
         title: const Text('Medical Reports'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshReports,
+          ),
+          IconButton(
             icon: const Icon(Icons.upload_file_rounded),
             onPressed: () => context.push('/upload-report'),
           )
         ],
       ),
-      body: Column(
+      body: RefreshIndicator(
+        onRefresh: _refreshReports,
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -116,6 +142,7 @@ class ReportsScreen extends StatelessWidget {
           ),
         ],
       ),
+    ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/upload-report'),
         icon: const Icon(Icons.camera_alt_outlined),

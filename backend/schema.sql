@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS availability_slots (
 CREATE TABLE IF NOT EXISTS appointments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     patient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    patient_name VARCHAR(255) DEFAULT 'Sarah Connor',
     doctor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
     status VARCHAR(20) DEFAULT 'confirmed' CHECK (status IN ('scheduled', 'confirmed', 'completed', 'cancelled')),

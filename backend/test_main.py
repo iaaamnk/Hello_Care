@@ -37,7 +37,13 @@ def test_reports_async_job():
     assert status_res.json()["status"] == "ready"
 
 def test_double_booking_prevention():
-    slot_time = "2026-08-12T10:00:00Z"
+    import random
+    from datetime import datetime, timedelta
+    random_days = random.randint(30, 300)
+    random_hour = random.randint(8, 18)
+    random_min = random.choice([0, 15, 30, 45])
+    slot_time = (datetime.now() + timedelta(days=random_days, hours=random_hour, minutes=random_min)).strftime("%Y-%m-%dT%H:%M:00Z")
+
     r1 = client.post("/api/v1/appointments", json={
         "doctorId": "d_house_202",
         "scheduledAt": slot_time

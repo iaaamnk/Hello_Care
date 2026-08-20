@@ -35,6 +35,7 @@ class AppointmentProvider extends ChangeNotifier {
 
   Future<void> bookAppointment({
     required String patientId,
+    String patientName = 'Sarah Connor',
     required DoctorModel doctor,
     required DateTime scheduledAt,
     String notes = '',
@@ -46,6 +47,7 @@ class AppointmentProvider extends ChangeNotifier {
       final newAppt = AppointmentModel(
         id: 'apt_${DateTime.now().millisecondsSinceEpoch}',
         patientId: patientId,
+        patientName: patientName,
         doctorId: doctor.uid,
         doctorName: doctor.name,
         doctorSpecialization: doctor.specialization,
@@ -60,5 +62,11 @@ class AppointmentProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> updateSchedule(String doctorId, Map<String, List<String>> schedule) async {
+    await _firestoreService.updateDoctorSchedule(doctorId, schedule);
+    await fetchDoctors();
+    notifyListeners();
   }
 }
